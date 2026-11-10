@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MineClone</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css">
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<!-- ===== 인게임 HUD ===== -->
+<div id="hud" class="hidden">
+  <div id="crosshair"></div>
+  <div id="debug" class="hidden"></div>
+  <div id="item-name"></div>
+  <div id="status-bar">
+    <div id="hearts"></div>
+    <div id="bubbles"></div>
+  </div>
+  <div id="hotbar"></div>
+  <div id="underwater"></div>
+  <div id="hurt"></div>
+  <div id="lock-hint" class="hidden">클릭해서 계속하기</div>
+</div>
+
+<!-- ===== 타이틀 화면 ===== -->
+<div id="screen-title" class="screen">
+  <div class="logo-wrap">
+    <div class="logo">MINECLONE</div>
+    <div class="edition">JAVA EDITION 클론</div>
+    <div class="splash" id="splash">AI로 역분석!</div>
+  </div>
+  <div class="menu">
+    <button class="mc-btn" data-act="singleplayer">싱글플레이</button>
+    <button class="mc-btn" disabled title="미구현: 서버 프로토콜 역분석 범위 초과">멀티플레이</button>
+    <button class="mc-btn" disabled title="미구현">Minecraft Realms</button>
+    <div class="row">
+      <button class="mc-btn half" data-act="options">설정...</button>
+      <button class="mc-btn half" data-act="quit">게임 종료</button>
+    </div>
+  </div>
+  <div class="corner-left">MineClone 1.0 (Minecraft Java Edition 1.21 웹 클론)</div>
+  <div class="corner-right">학습용 비공식 프로젝트 · Minecraft는 Mojang Studios의 상표입니다</div>
+</div>
+
+<!-- ===== 월드 선택 ===== -->
+<div id="screen-worlds" class="screen dirt">
+  <div class="screen-title">월드 선택</div>
+  <div class="world-list-wrap"><div id="world-list"></div></div>
+  <div class="bottom-bar">
+    <div class="row">
+      <button class="mc-btn" id="btn-play-world" data-act="play-selected" disabled>선택한 월드 플레이</button>
+      <button class="mc-btn" data-act="create">새로운 월드 만들기</button>
+    </div>
+    <div class="row">
+      <button class="mc-btn quarter" id="btn-delete-world" data-act="delete-selected" disabled>삭제</button>
+      <button class="mc-btn quarter" disabled title="미구현">다시 만들기</button>
+      <button class="mc-btn" data-act="back-title">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 월드 만들기 ===== -->
+<div id="screen-create" class="screen dirt">
+  <div class="screen-title">새로운 월드 만들기</div>
+  <div class="form">
+    <label class="mc-label-w">월드 이름</label>
+    <input id="in-world-name" class="mc-input" value="새로운 월드" maxlength="32">
+    <div class="hint" id="world-folder">저장될 이름: 새로운 월드</div>
+    <button class="mc-btn wide" id="btn-mode" data-act="toggle-mode">게임 모드: 서바이벌</button>
+    <div class="hint" id="mode-desc">자원을 탐색하고, 제작하고, 레벨을 올리고, 체력을 관리하세요</div>
+    <button class="mc-btn wide" disabled title="미구현">난이도: 보통</button>
+    <label class="mc-label-w">월드 생성 시드</label>
+    <input id="in-seed" class="mc-input" placeholder="무작위 시드는 비워 두세요">
+  </div>
+  <div class="bottom-bar">
+    <div class="row">
+      <button class="mc-btn" data-act="create-world">새로운 월드 만들기</button>
+      <button class="mc-btn" data-act="back-worlds">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 설정 ===== -->
+<div id="screen-options" class="screen dirt">
+  <div class="screen-title">설정</div>
+  <div class="options-grid">
+    <div class="mc-slider" data-key="fov" data-min="30" data-max="110" data-step="1"><div class="fill"></div><span></span></div>
+    <div class="mc-slider" data-key="renderDistance" data-min="2" data-max="8" data-step="1"><div class="fill"></div><span></span></div>
+    <div class="mc-slider" data-key="sensitivity" data-min="10" data-max="200" data-step="1"><div class="fill"></div><span></span></div>
+    <div class="mc-slider" data-key="sound" data-min="0" data-max="100" data-step="1"><div class="fill"></div><span></span></div>
+    <button class="mc-btn" data-act="toggle-bob" id="btn-bob"></button>
+    <button class="mc-btn" data-act="toggle-clouds" id="btn-clouds"></button>
+    <button class="mc-btn" disabled title="미구현">스킨 사용자 지정...</button>
+    <button class="mc-btn" disabled title="미구현">언어...</button>
+  </div>
+  <div class="bottom-bar"><div class="row"><button class="mc-btn" data-act="options-done">완료</button></div></div>
+</div>
+
+<!-- ===== 일시정지 ===== -->
+<div id="screen-pause" class="screen dim">
+  <div class="screen-title top">게임 메뉴</div>
+  <div class="menu narrow">
+    <button class="mc-btn" data-act="resume">게임으로 돌아가기</button>
+    <div class="row">
+      <button class="mc-btn half" disabled title="미구현">발전 과제</button>
+      <button class="mc-btn half" disabled title="미구현">통계</button>
+    </div>
+    <button class="mc-btn" data-act="options">설정...</button>
+    <button class="mc-btn" disabled title="미구현">LAN에 공개</button>
+    <button class="mc-btn" data-act="save-quit">저장 후 타이틀 화면으로 나가기</button>
+  </div>
+</div>
+
+<!-- ===== 사망 ===== -->
+<div id="screen-dead" class="screen red">
+  <div class="dead-title">사망했습니다!</div>
+  <div class="dead-reason" id="dead-reason"></div>
+  <div class="menu narrow">
+    <button class="mc-btn" data-act="respawn">리스폰</button>
+    <button class="mc-btn" data-act="save-quit">타이틀 화면</button>
+  </div>
+</div>
+
+<!-- ===== 로딩 ===== -->
+<div id="screen-loading" class="screen dirt">
+  <div class="loading-text" id="loading-text">월드를 불러오는 중</div>
+  <div class="loading-bar"><div id="loading-fill"></div></div>
+</div>
+
+<!-- ===== 인벤토리/제작/화로 ===== -->
+<div id="container-screen"></div>
+<div id="cursor-item"></div>
+<div id="tooltip"></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

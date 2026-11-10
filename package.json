@@ -1,0 +1,15 @@
+{
+  "name": "mineclone",
+  "version": "1.0.0",
+  "description": "Minecraft Java Edition 웹 클론 (REA 과제)",
+  "scripts": {
+    "test": "node tests/world.test.mjs",
+    "start": "npx serve ."
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "three": "^0.160.0"
+  },
+  "type": "module"
+}
